@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Script Uninstall LXD Total
+# Hapus semua komponen LXD termasuk data, konfigurasi, dan sisa-sisa file
+# Harap dijalankan dengan sudo atau sebagai root
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Script harus dijalankan sebagai root, gunakan sudo!"
+    exit 1
+fi
+
+echo -e "\n[1/7] Menghentikan layanan LXD..."
+{
+    systemctl stop snap.lxd.daemon 2>/dev/null
+    systemctl stop lxd.service 2>/dev/null
+    systemctl disable lxd.service 2>/dev/null
+    pkill -9 -f lxd
+} > /dev/null 2>&1
+
+echo "[2/7] Menghapus instalasi LXD..."
+{
+    # Hapus versi snap
+    if snap list lxd >/dev/null 2>&1; then
+        snap remove --purge lxd
+    fi
+
+    # Hapus versi apt
+    if dpkg -l lxd >/dev/null 2>&1 || dpkg -l lxd-client >/dev/null 2>&1; then
+        apt-get remove --purge -y lxd lxd-client
+    fi
+} > /dev/null 2>&1
+
+echo "[3/7] Membersihkan data dan konfigurasi..."
+{
+    rm -rf /var/lib/lxd
+    rm -rf /var/snap/lxd
+    rm -rf /var/lxd
+    rm -rf /etc/lxd
+    rm -f /etc/subuid
+    rm -f /etc/subgid
+} > /dev/null 2>&1
+
+echo "[4/7] Menghapus container residual..."
+{
+    rm -rf /var/lib/containerd
+    rm -rf /var/cache/lxd
+    rm -rf /root/snap/lxd
+    rm -rf /home/*/snap/lxd
+} > /dev/null 2>&1
+
+echo "[5/7] Membersihkan file konfigurasi shell..."
+{
+    # Hapus alias dari bashrc global
+    sed -i '/alias menu=/d' /etc/bash.bashrc
+    sed -i '/alias menu=/d' /etc/profile.d/*
+
+    # Hapus dari bashrc user
+    for user_home in /home/* /root; do
+        if [ -f "$user_home/.bashrc" ]; then
+            sed -i '/alias menu=/d' "$user_home/.bashrc"
+        fi
+    done
+} > /dev/null 2>&1
+
+echo "[6/7] Membersihkan cron jobs terkait..."
+{
+    # Hapus cron jobs yang terkait LXD
+    crontab -l | grep -v 'lxd' | crontab -
+    rm -f /etc/cron.d/*lxd*
+} > /dev/null 2>&1
+
+echo "[7/7] Memperbaiki database paket..."
+{
+    apt-get autoremove -y
+    apt-get autoclean -y
+    rm -rf /var/lib/apt/lists/*
+} > /dev/null 2>&1
+lxc delete vpn-container --force
+sudo rm -rf /var/lib/lxd
+sudo rm -rf /var/snap/lxd
+sudo rm -rf /var/lib/lxd
+sudo rm -rf /etc/lxd
+
+echo -e "\n✅ Uninstall berhasil! LXD telah dihapus sepenuhnya."
+echo "Disarankan untuk reboot sistem: sudo reboot"

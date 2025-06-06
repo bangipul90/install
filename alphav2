@@ -1026,3 +1026,4 @@ echo "" | tee -a log-install.txt
 echo "Semuanya Berjalan Ok...Terimakasih Telah menggunakan Script SUKADATA!!"
 sleep 1
 echo -ne "[ ${yell}COMPLETED${NC} ] PENGINSTALAN SCRIPT SELESAI? "
+reboot

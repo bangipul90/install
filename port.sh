@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER_NAME="vpn-container"
+CONTAINER_NAME="haxor"
 
 echo "📦 Menambahkan port forwarding ke container: $CONTAINER_NAME"
 
@@ -24,5 +24,6 @@ lxc config device add $CONTAINER_NAME dropbear442 proxy listen=tcp:0.0.0.0:442 c
 lxc config device add $CONTAINER_NAME haproxy8443 proxy listen=tcp:0.0.0.0:8443 connect=tcp:127.0.0.1:8443
 lxc config device add $CONTAINER_NAME haproxy8080 proxy listen=tcp:0.0.0.0:8080 connect=tcp:127.0.0.1:8080
 lxc config device add $CONTAINER_NAME haproxy3000 proxy listen=tcp:0.0.0.0:3000 connect=tcp:127.0.0.1:3000
+lxc config device add $CONTAINER_NAME Access81 proxy listen=tcp:0.0.0.0:81 connect=tcp:127.0.0.1:81
 
 echo "✅ Semua port forwarding berhasil ditambahkan."
